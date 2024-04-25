@@ -1,0 +1,3 @@
+[submodule "SimpleSocket"]
+	path = SimpleSocket
+	url = https://github.com/Electroscape/SimpleSocket
