@@ -82,7 +82,22 @@ def trigger_event(event_key, event_value=None):
     if event_value is None:
         return
 
-    print(f"triggered event {event_key}")
+    if event_key in timed_events:
+        if event_key in already_started_events:
+            return
+        else:
+            already_started_events.append(event_key)
+
+    if event_key == "airlock_intro":
+        global time_start
+        time_start = dt.now()
+    elapsed_time_str = ""
+
+    if time_start is not None:
+        event_dt = dt.now() - time_start
+        elapsed_time_str = str(event_dt)
+    log_msg = f"{elapsed_time_str} {event_key}"
+    logging.info(log_msg)
 
     # IO pins
     try:
@@ -245,6 +260,22 @@ def inverted_triggered(event_value, active_inputs):
     return True
 
 
+def handle_timed_events():
+    for event_key, event_value in timed_events.items():
+        if timed_trigger(event_value):
+            trigger_event(event_key, event_value)
+
+
+def timed_trigger(event_value):
+    event_time = event_value.get(trigger_time)
+    if time_start is None:
+        return False
+    if dt.now() - time_start >= timedelta(minutes=event_time):
+        return True
+    else:
+        return False
+
+
 def reset_gpios():
     # print(reset_gpios_dicts)
     remove_keys = []
@@ -285,6 +316,7 @@ def main():
         reset_gpios()
         handle_event_shedule()
 
+        handle_timed_events()
 
 if __name__ == '__main__':
     settings = load_settings()
